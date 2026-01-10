@@ -172,17 +172,18 @@ function setupHlsPlayer(url) {
         playbackState.textContent = 'Playing';
         
         // Calculate network speed from fragment load stats
-        if (data.stats) {
-            const loaded = data.stats.loaded || data.frag.stats?.loaded || 0;
-            const duration = data.stats.total || data.frag.stats?.total || 1;
+        if (data.frag && data.frag.stats) {
+            const stats = data.frag.stats;
+            const loadTimeMs = stats.loading.end - stats.loading.start;
+            const bytesLoaded = stats.loaded;
             
-            if (loaded > 0 && duration > 0) {
-                // Calculate speed in Mbps
-                const speedMbps = (loaded * 8 / (duration / 1000) / 1000000).toFixed(2);
+            if (bytesLoaded > 0 && loadTimeMs > 0) {
+                // Calculate speed in Mbps (bytes * 8 bits/byte / time in ms * 1000 ms/s / 1000000 bits/Mbps)
+                const speedMbps = ((bytesLoaded * 8) / loadTimeMs / 1000).toFixed(2);
                 networkSpeed.textContent = `${speedMbps} Mbps`;
                 
                 // Track for averaging
-                lastLoadedBytes = loaded;
+                lastLoadedBytes = bytesLoaded;
                 lastLoadTime = Date.now();
             }
         }
