@@ -5,6 +5,8 @@ let metricsInterval = null;
 let eventLogItems = [];
 let lastLoadedBytes = 0;
 let lastLoadTime = Date.now();
+let speedSamples = [];
+const MAX_SPEED_SAMPLES = 5;
 
 // DOM Elements
 const loadingOverlay = document.getElementById('loadingOverlay');
@@ -179,8 +181,17 @@ function setupHlsPlayer(url) {
             
             if (bytesLoaded > 0 && loadTimeMs > 0) {
                 // Calculate speed in Mbps (bytes * 8 bits/byte / time in ms * 1000 ms/s / 1000000 bits/Mbps)
-                const speedMbps = ((bytesLoaded * 8) / loadTimeMs / 1000).toFixed(2);
-                networkSpeed.textContent = `${speedMbps} Mbps`;
+                const speedMbps = parseFloat(((bytesLoaded * 8) / loadTimeMs / 1000).toFixed(2));
+                
+                // Add to samples for moving average
+                speedSamples.push(speedMbps);
+                if (speedSamples.length > MAX_SPEED_SAMPLES) {
+                    speedSamples.shift();
+                }
+                
+                // Calculate average speed
+                const avgSpeed = (speedSamples.reduce((a, b) => a + b, 0) / speedSamples.length).toFixed(2);
+                networkSpeed.textContent = `${avgSpeed} Mbps`;
                 
                 // Track for averaging
                 lastLoadedBytes = bytesLoaded;
