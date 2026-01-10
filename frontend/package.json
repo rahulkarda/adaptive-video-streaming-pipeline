@@ -1,0 +1,13 @@
+{
+  "name": "adaptive-streaming-frontend",
+  "version": "1.0.0",
+  "description": "Frontend for Adaptive Video Streaming Pipeline",
+  "scripts": {
+    "serve": "python3 -m http.server 5500",
+    "serve:node": "npx http-server -p 5500 -c-1",
+    "open": "open http://localhost:5500"
+  },
+  "keywords": ["video", "streaming", "hls", "frontend"],
+  "author": "",
+  "license": "MIT"
+}

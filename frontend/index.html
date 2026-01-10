@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adaptive Video Streaming Pipeline</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.15/dist/hls.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>🎬 Adaptive Video Streaming Pipeline</h1>
+            <p class="subtitle">HLS + FFmpeg • Multi-Quality Adaptive Streaming</p>
+        </header>
+
+        <!-- Architecture Diagram -->
+        <section class="architecture-section">
+            <h2>Pipeline Architecture</h2>
+            <div class="pipeline-diagram">
+                <div class="pipeline-step">
+                    <div class="step-icon">📤</div>
+                    <div class="step-label">Upload</div>
+                    <div class="step-desc">Multer receives video</div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-step">
+                    <div class="step-icon">⚙️</div>
+                    <div class="step-label">FFmpeg</div>
+                    <div class="step-desc">Transcode to HLS</div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-step">
+                    <div class="step-icon">📦</div>
+                    <div class="step-label">Multi-Quality</div>
+                    <div class="step-desc">360p/480p/720p</div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-step">
+                    <div class="step-icon">💾</div>
+                    <div class="step-label">Local Storage</div>
+                    <div class="step-desc">.m3u8 + .ts files</div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-step">
+                    <div class="step-icon">▶️</div>
+                    <div class="step-label">HLS.js Player</div>
+                    <div class="step-desc">Adaptive streaming</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Upload Section -->
+            <section class="upload-section" id="uploadSection">
+                <h2>Upload Video</h2>
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-content">
+                        <div class="upload-icon">🎥</div>
+                        <p class="upload-text">Drag & drop video here</p>
+                        <p class="upload-subtext">or</p>
+                        <label for="fileInput" class="upload-button">Choose File</label>
+                        <input type="file" id="fileInput" accept="video/*" hidden>
+                        <p class="upload-info">Supports: MP4, MOV, AVI, WebM (Max 100MB)</p>
+                    </div>
+                </div>
+                
+                <!-- Upload Progress -->
+                <div class="upload-progress" id="uploadProgress" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <p class="progress-text" id="progressText">Uploading...</p>
+                </div>
+
+                <!-- Upload Status -->
+                <div class="upload-status" id="uploadStatus" style="display: none;"></div>
+                
+                <!-- Processing Status -->
+                <div class="processing-status" id="processingStatus" style="display: none;">
+                    <p class="processing-text" id="processingText">Processing...</p>
+                </div>
+            </section>
+
+            <!-- Player Section -->
+            <section class="player-section" id="playerSection" style="display: none;">
+                <h2>Adaptive Streaming Player</h2>
+                <div class="video-container">
+                    <video id="videoPlayer" controls></video>
+                    <div class="video-overlay" id="loadingOverlay">
+                        <div class="spinner"></div>
+                        <p>Loading stream...</p>
+                    </div>
+                </div>
+
+                <!-- Streaming Info Panel -->
+                <div class="info-panel">
+                    <h3>📊 Streaming Metrics</h3>
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-label">Current Quality</div>
+                            <div class="metric-value" id="currentQuality">Auto</div>
+                            <select id="qualitySelector" class="quality-selector">
+                                <option value="-1">Auto</option>
+                            </select>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Resolution</div>
+                            <div class="metric-value" id="currentResolution">-</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Bitrate</div>
+                            <div class="metric-value" id="currentBitrate">- Mbps</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Buffer Length</div>
+                            <div class="metric-value" id="bufferLength">0s</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Playback State</div>
+                            <div class="metric-value" id="playbackState">Ready</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Network</div>
+                            <div class="metric-value" id="networkSpeed">-</div>
+                        </div>
+                    </div>
+
+                    <!-- Event Log -->
+                    <div class="event-log-container">
+                        <h4>🔄 Quality Switch Events</h4>
+                        <div class="event-log" id="eventLog">
+                            <div class="event-item">Waiting for events...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="reset-button" id="resetButton">Upload New Video</button>
+            </section>
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <p>Built with HLS.js • FFmpeg • Node.js/Express</p>
+            <p class="tech-stack">Local Multi-Quality Adaptive Streaming</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+    <script src="player.js"></script>
+</body>
+</html>
