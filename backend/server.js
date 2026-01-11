@@ -2,10 +2,34 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const rateLimit = require('express-rate-limit');
 const uploadRoutes = require('./routes/upload');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Rate limiting configuration
+const uploadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Limit each IP to 5 uploads per windowMs
+  message: {
+    success: false,
+    error: 'Too many upload requests, please try again later.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const apiLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 100, // Limit each IP to 100 requests per minute
+  message: {
+    success: false,
+    error: 'Too many requests, please try again later.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Middleware
 app.use(cors({
@@ -35,7 +59,10 @@ app.use((req, res, next) => {
 });
 
 // Routes
-app.use('/api', uploadRoutes);
+app.use('/api', apiLimiter, uploadRoutes);
+
+// Export rate limiters for specific routes
+app.set('uploadLimiter', uploadLimiter);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -45,6 +72,10 @@ app.get('/', (req, res) => {
     endpoints: {
       upload: 'POST /api/upload',
       health: 'GET /api/health'
+    },
+    rateLimits: {
+      api: '100 requests per minute',
+      upload: '5 uploads per 15 minutes'
     }
   });
 });

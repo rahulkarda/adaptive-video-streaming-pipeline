@@ -7,6 +7,8 @@ let lastLoadedBytes = 0;
 let lastLoadTime = Date.now();
 let speedSamples = [];
 const MAX_SPEED_SAMPLES = 5;
+const PLAYBACK_SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+let currentSpeedIndex = 2; // Default to 1x
 
 // DOM Elements
 const loadingOverlay = document.getElementById('loadingOverlay');
@@ -18,6 +20,8 @@ const playbackState = document.getElementById('playbackState');
 const networkSpeed = document.getElementById('networkSpeed');
 const eventLog = document.getElementById('eventLog');
 const qualitySelector = document.getElementById('qualitySelector');
+const speedBtn = document.getElementById('speedBtn');
+const pipBtn = document.getElementById('pipBtn');
 
 /**
  * Initialize HLS player
@@ -47,6 +51,12 @@ window.initPlayer = function(hlsUrl, fileName) {
 
     // Setup video event listeners
     setupVideoListeners();
+    
+    // Setup player controls
+    setupPlayerControls();
+    
+    // Setup keyboard shortcuts
+    setupKeyboardShortcuts();
     
     // Start metrics monitoring
     startMetricsMonitoring();

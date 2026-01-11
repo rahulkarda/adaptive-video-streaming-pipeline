@@ -3,7 +3,20 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { convertToAdaptiveHLS } = require('../hls-converter');
+const rateLimit = require('express-rate-limit');
+const { convertToAdaptiveHLS, generateThumbnail } = require('../hls-converter');
+
+// Upload-specific rate limiter
+const uploadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Limit each IP to 5 uploads per 15 minutes
+  message: {
+    success: false,
+    error: 'Too many upload requests from this IP, please try again after 15 minutes.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Configure multer for disk storage (needed for FFmpeg)
 const storage = multer.diskStorage({
@@ -47,8 +60,9 @@ const upload = multer({
 /**
  * POST /upload
  * Upload video and convert to HLS streaming format
+ * Rate limited: 5 uploads per 15 minutes per IP
  */
-router.post('/upload', upload.single('video'), async (req, res) => {
+router.post('/upload', uploadLimiter, upload.single('video'), async (req, res) => {
   let tempFilePath = null;
   let hlsOutputDir = null;
 
@@ -73,6 +87,20 @@ router.post('/upload', upload.single('video'), async (req, res) => {
     console.log(`Adaptive HLS conversion successful: ${hlsResult.fileName}`);
     console.log(`Quality levels: ${hlsResult.qualities.map(q => q.name).join(', ')}`);
 
+    // Generate thumbnail
+    const thumbnailPath = path.join(hlsOutputDir, 'thumbnail.jpg');
+    let thumbnailUrl = null;
+    try {
+      await generateThumbnail(tempFilePath, thumbnailPath, 2);
+      thumbnailUrl = `${process.env.NODE_ENV === 'production' 
+        ? `${req.protocol}://${req.get('host')}`
+        : `http://localhost:${process.env.PORT || 3000}`}/videos/${baseName}/thumbnail.jpg`;
+      console.log('Thumbnail generated successfully');
+    } catch (thumbError) {
+      console.warn('Thumbnail generation failed:', thumbError.message);
+      // Continue even if thumbnail fails
+    }
+
     // Generate URL for HLS master manifest (works in both local and production)
     const baseUrl = process.env.NODE_ENV === 'production' 
       ? `${req.protocol}://${req.get('host')}`
@@ -86,6 +114,7 @@ router.post('/upload', upload.single('video'), async (req, res) => {
         fileName: req.file.originalname,
         hlsUrl: hlsUrl,
         manifestFile: hlsResult.fileName,
+        thumbnailUrl: thumbnailUrl,
         size: req.file.size,
         outputDir: baseName
       }

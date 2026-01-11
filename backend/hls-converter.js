@@ -184,8 +184,43 @@ function cleanup(directory) {
   }
 }
 
+/**
+ * Generate thumbnail from video
+ * @param {string} inputPath - Path to input video file
+ * @param {string} outputPath - Path for thumbnail output
+ * @param {number} timeInSeconds - Time position to capture (default: 2 seconds)
+ * @returns {Promise<string>} Path to generated thumbnail
+ */
+function generateThumbnail(inputPath, outputPath, timeInSeconds = 2) {
+  return new Promise((resolve, reject) => {
+    const outputDir = path.dirname(outputPath);
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
+    }
+
+    console.log(`Generating thumbnail at ${timeInSeconds}s...`);
+
+    ffmpeg(inputPath)
+      .screenshots({
+        timestamps: [timeInSeconds],
+        filename: path.basename(outputPath),
+        folder: outputDir,
+        size: '320x180' // 16:9 aspect ratio thumbnail
+      })
+      .on('end', () => {
+        console.log('Thumbnail generated:', outputPath);
+        resolve(outputPath);
+      })
+      .on('error', (err) => {
+        console.error('Error generating thumbnail:', err.message);
+        reject(err);
+      });
+  });
+}
+
 module.exports = {
   convertToHLS,
   convertToAdaptiveHLS,
+  generateThumbnail,
   cleanup
 };
