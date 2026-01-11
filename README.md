@@ -10,8 +10,13 @@ This application allows users to upload videos which are automatically transcode
 
 - Multi-quality video transcoding (360p, 480p, 720p)
 - Adaptive bitrate streaming with HLS
+- **Automatic thumbnail generation** (FFmpeg-based)
 - Manual quality selection
+- **Playback speed controls** (0.5x - 2x)
+- **Picture-in-Picture mode**
+- **Comprehensive keyboard shortcuts** (YouTube-style)
 - Real-time streaming metrics (bitrate, resolution, buffer, network speed)
+- **Rate limiting** (5 uploads per 15 min, 100 API requests per min)
 - Drag-and-drop file upload
 - Responsive modern UI
 - Local file serving (no CDN required)
@@ -20,13 +25,15 @@ This application allows users to upload videos which are automatically transcode
 
 ### Backend
 - Node.js & Express.js
-- FFmpeg (video transcoding)
+- FFmpeg (video transcoding & thumbnail extraction)
 - fluent-ffmpeg (Node.js FFmpeg wrapper)
 - Multer (file upload handling)
+- express-rate-limit (API protection)
 
 ### Frontend
 - Vanilla JavaScript
 - HLS.js (adaptive streaming player)
+- HTML5 Video API (PiP, playback speed)
 - HTML5 & CSS3
 
 ## Architecture
@@ -104,8 +111,30 @@ Or use Live Server extension in VS Code
 2. Drag and drop a video file or click to select
 3. Wait for FFmpeg transcoding (shows progress in backend console)
 4. Video automatically plays with adaptive streaming
-5. Use quality selector dropdown to manually choose quality
-6. Monitor real-time metrics (resolution, bitrate, buffer, network speed)
+5. **Automatic thumbnail generated** at 2 seconds
+6. Use quality selector dropdown to manually choose quality
+7. Monitor real-time metrics (resolution, bitrate, buffer, network speed)
+
+### Player Controls
+
+**Speed Control:**
+- Click speed button (top-right) to cycle through speeds: 0.5x, 0.75x, 1x, 1.25x, 1.5x, 1.75x, 2x
+- Or press `S` keyboard shortcut
+
+**Picture-in-Picture:**
+- Click PiP button or press `P` to float video in small window
+
+**Keyboard Shortcuts:**
+- `Space` or `K` - Play/Pause
+- `←` / `→` - Seek ±5 seconds
+- `J` / `L` - Seek ±10 seconds
+- `↑` / `↓` - Volume ±10%
+- `M` - Mute/Unmute
+- `F` - Fullscreen
+- `P` - Picture-in-Picture
+- `S` - Playback speed
+- `0` or `Home` - Jump to start
+- `End` - Jump to end
 
 ## Project Structure
 
@@ -116,19 +145,20 @@ Or use Live Server extension in VS Code
 ├── RESUME.md
 ├── WORKFLOW.md
 ├── backend/
-│   ├── server.js              # Express server
-│   ├── hls-converter.js       # FFmpeg transcoding logic
+│   ├── server.js              # Express server with rate limiting
+│   ├── hls-converter.js       # FFmpeg transcoding & thumbnail generation
 │   ├── routes/
-│   │   └── upload.js          # Upload endpoint
+│   │   └── upload.js          # Upload endpoint with rate limiting
 │   ├── uploads/
 │   │   ├── temp/              # Temporary upload storage
-│   │   └── hls/               # HLS output files
+│   │   └── hls/               # HLS output files + thumbnails
 │   └── package.json
 └── frontend/
-    ├── index.html             # Main UI
-    ├── styles.css             # Styling
+    ├── index.html             # Main UI with player controls
+    ├── styles.css             # Styling with control buttons
     ├── app.js                 # Upload handling
-    └── player.js              # HLS.js player logic
+    ├── player.js              # HLS.js player logic
+    └── player-controls.js     # Speed, PiP, keyboard shortcuts
 ```
 
 ## API Endpoints
@@ -146,13 +176,20 @@ Upload video for transcoding
 {
   "success": true,
   "message": "Video uploaded and converted to HLS successfully",
-  "fileName": "video.mp4",
-  "hlsUrl": "http://localhost:3000/videos/video/video_master.m3u8",
-  "manifestFile": "video_master.m3u8",
-  "size": 2440227,
-  "outputDir": "video"
+  "data": {
+    "fileName": "video.mp4",
+    "hlsUrl": "http://localhost:3000/videos/video/video_master.m3u8",
+    "thumbnailUrl": "http://localhost:3000/videos/video/thumbnail.jpg",
+    "manifestFile": "video_master.m3u8",
+    "size": 2440227,
+    "outputDir": "video"
+  }
 }
 ```
+
+**Rate Limits:**
+- 5 uploads per 15 minutes per IP
+- Returns 429 status if exceeded
 
 ### GET /videos/:videoName/:file
 Serve HLS manifest and segment files
