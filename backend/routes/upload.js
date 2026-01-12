@@ -92,19 +92,23 @@ router.post('/upload', uploadLimiter, upload.single('video'), async (req, res) =
     let thumbnailUrl = null;
     try {
       await generateThumbnail(tempFilePath, thumbnailPath, 2);
-      thumbnailUrl = `${process.env.NODE_ENV === 'production' 
-        ? `${req.protocol}://${req.get('host')}`
-        : `http://localhost:${process.env.PORT || 3000}`}/videos/${baseName}/thumbnail.jpg`;
+      const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+      const host = process.env.NODE_ENV === 'production' 
+        ? req.get('host')
+        : `localhost:${process.env.PORT || 3000}`;
+      thumbnailUrl = `${protocol}://${host}/videos/${baseName}/thumbnail.jpg`;
       console.log('Thumbnail generated successfully');
     } catch (thumbError) {
       console.warn('Thumbnail generation failed:', thumbError.message);
       // Continue even if thumbnail fails
     }
 
-    // Generate URL for HLS master manifest (works in both local and production)
-    const baseUrl = process.env.NODE_ENV === 'production' 
-      ? `${req.protocol}://${req.get('host')}`
-      : `http://localhost:${process.env.PORT || 3000}`;
+    // Generate URL for HLS master manifest (HTTPS in production)
+    const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+    const host = process.env.NODE_ENV === 'production' 
+      ? req.get('host')
+      : `localhost:${process.env.PORT || 3000}`;
+    const baseUrl = `${protocol}://${host}`;
     const hlsUrl = `${baseUrl}/videos/${baseName}/${hlsResult.fileName}`;
 
     res.json({

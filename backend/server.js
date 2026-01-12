@@ -8,6 +8,9 @@ const uploadRoutes = require('./routes/upload');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy - Required for Render/Railway/Heroku to get correct client IP
+app.set('trust proxy', 1);
+
 // Rate limiting configuration
 const uploadLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
