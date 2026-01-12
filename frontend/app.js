@@ -1,7 +1,7 @@
 // Configuration
 const API_URL = window.location.hostname === 'localhost' 
   ? 'http://localhost:3000/api' 
-  : 'https://your-backend.onrender.com/api'; // Update with your Render backend URL
+  : 'https://adaptive-video-streaming-pipeline.onrender.com/api';
 
 // DOM Elements
 const uploadArea = document.getElementById('uploadArea');
